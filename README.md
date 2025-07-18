@@ -1,0 +1,2 @@
+### What Is This?
+This is a tool used to convert Ignition Casino cash game hand histories into the PokerStars format for use with poker databases that function with PokerStars hand histories but not ignition hand histories.
