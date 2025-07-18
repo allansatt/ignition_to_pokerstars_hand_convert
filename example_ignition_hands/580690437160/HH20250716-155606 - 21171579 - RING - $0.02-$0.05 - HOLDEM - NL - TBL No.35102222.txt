@@ -1,0 +1,24 @@
+Ignition Hand #4804999994 TBL#35102222 HOLDEM No Limit - 2025-07-16 15:56:29
+Seat 1: Dealer [ME] ($5 in chips)
+Seat 3: Big Blind ($5 in chips)
+Dealer  [ME] : Set dealer [1] 
+Dealer  [ME] : Small Blind $0.02 
+Big Blind : Big blind $0.05 
+*** HOLE CARDS ***
+Dealer  [ME] : Card dealt to a spot [7c Qs] 
+Big Blind : Card dealt to a spot [7h 5d] 
+Dealer  [ME] : Raises $0.13 to $0.15
+Big Blind : Folds
+Dealer  [ME] : Return uncalled portion of bet $0.10 
+Dealer  [ME] : Does not show [7c Qs] (High Card)
+Dealer  [ME] : Hand result $0.10 
+Dealer  [ME] : Seat sit out
+Dealer  [ME] : Seat stand
+Dealer  [ME] : Table leave user
+Big Blind : Seat stand
+Big Blind : Table leave user
+*** SUMMARY ***
+Total Pot($0.10)
+Seat+1: Dealer $0.10 [Does not show]  
+Seat+3: Big Blind Folded before the FLOP
+

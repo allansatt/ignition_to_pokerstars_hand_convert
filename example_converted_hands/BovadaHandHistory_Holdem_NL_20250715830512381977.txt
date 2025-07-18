@@ -1,0 +1,135 @@
+PokerStars Hand #4803420832: Hold'em No Limit ($0.02/$0.05) - 2025/07/11 20:10:00
+Table '#35070615' 6-max Seat #2 is the button
+Seat 1: PLR_1941506KN ($2.41 in chips)
+Seat 2: PLR_8345464ZV ($1.25 in chips)
+Seat 3: PLR_8420949VO ($6.17 in chips)
+Seat 4: Hero ($5 in chips)
+Seat 5: PLR_7645513OL ($8.31 in chips)
+Seat 6: PLR_8636426ZC ($11.36 in chips)
+PLR_8420949VO: posts small blind $0.02
+Hero: posts big blind $0.05
+*** HOLE CARDS ***
+Dealt to Hero [Tc 9s]
+PLR_7645513OL: raises $0.15 to $0.15
+PLR_8636426ZC: folds
+PLR_1941506KN: folds
+PLR_8345464ZV: folds (disconnect)
+PLR_8420949VO: calls $0.13 
+Hero: folds
+*** FLOP *** [Qc Td Qd]
+PLR_8420949VO: checks
+Table deposit $5 
+PLR_7645513OL: bets $0.11 
+PLR_8420949VO: calls $0.11 
+*** TURN *** [Qc Td Qd] [Jd]
+PLR_8420949VO: checks
+PLR_7645513OL: bets $0.41 
+PLR_8420949VO: calls $0.41 
+*** RIVER *** [Qc Td Qd Jd] [3h]
+PLR_8420949VO: checks
+PLR_7645513OL: bets $1 
+PLR_8420949VO: folds
+Uncalled bet ($1) returned to PLR_7645513OL
+PLR_7645513OL: shows [9c 8c]
+PLR_7645513OL collected $1.33 from pot
+PLR_1941506KN: shows [3c Js]
+PLR_8345464ZV: shows [6h 2s]
+PLR_8420949VO: shows [Ts Ad]
+Hero: shows [Tc 9s]
+PLR_8636426ZC: shows [As 2c]
+*** SUMMARY ***
+Total pot $1.39 | Rake $0.06
+Board [Qc Td Qd Jd 3h]
+Seat 1: PLR_1941506KN showed [3c Js]
+Seat 2: PLR_8345464ZV (button) showed [6h 2s]
+Seat 3: PLR_8420949VO (small blind) showed [Ts Ad]
+Seat 4: Hero (big blind) showed [Tc 9s]
+Seat 5: PLR_7645513OL showed [9c 8c] and won ($1.33)
+Seat 6: PLR_8636426ZC showed [As 2c]
+
+
+
+PokerStars Hand #4803421350: Hold'em No Limit ($0.02/$0.05) - 2025/07/11 20:11:37
+Table '#35070615' 6-max Seat #3 is the button
+Seat 1: PLR_1941506KN ($2.41 in chips)
+Seat 3: PLR_8420949VO ($5.50 in chips)
+Seat 4: Hero ($5 in chips)
+Seat 5: PLR_7645513OL ($8.97 in chips)
+Seat 6: PLR_8636426ZC ($11.36 in chips)
+Hero: posts small blind $0.02
+PLR_7645513OL: posts big blind $0.05
+*** HOLE CARDS ***
+Dealt to Hero [6c 2d]
+PLR_8636426ZC: folds
+PLR_1941506KN: calls $0.05 
+PLR_8420949VO: folds
+Hero: folds
+PLR_7645513OL: checks
+*** FLOP *** [8s 7d Kc]
+PLR_7645513OL: checks
+PLR_1941506KN: bets $0.10 
+PLR_7645513OL: folds
+Uncalled bet ($0.10) returned to PLR_1941506KN
+PLR_1941506KN: shows [7h Qh]
+PLR_1941506KN collected $0.12 from pot
+PLR_8420949VO: shows [Qc 5d]
+Hero: shows [6c 2d]
+PLR_7645513OL: shows [8h Js]
+PLR_8636426ZC: shows [7c 6h]
+*** SUMMARY ***
+Total pot $0.12 | Rake $0.00
+Board [8s 7d Kc]
+Seat 1: PLR_1941506KN showed [7h Qh] and won ($0.12)
+Seat 3: PLR_8420949VO (button) showed [Qc 5d]
+Seat 4: Hero (small blind) showed [6c 2d]
+Seat 5: PLR_7645513OL (big blind) showed [8h Js]
+Seat 6: PLR_8636426ZC showed [7c 6h]
+
+
+
+PokerStars Hand #4803421629: Hold'em No Limit ($0.02/$0.05) - 2025/07/11 20:12:29
+Table '#35070615' 6-max Seat #4 is the button
+Seat 1: PLR_1941506KN ($2.48 in chips)
+Seat 3: PLR_8420949VO ($5.50 in chips)
+Seat 4: Hero ($4.98 in chips)
+Seat 5: PLR_7645513OL ($8.92 in chips)
+Seat 6: PLR_8636426ZC ($11.36 in chips)
+PLR_7645513OL: posts small blind $0.02
+PLR_8636426ZC: posts big blind $0.05
+*** HOLE CARDS ***
+Dealt to Hero [Ts 5h]
+PLR_1941506KN: raises $0.15 to $0.15
+PLR_8420949VO: calls $0.15 
+Hero: folds
+PLR_7645513OL: folds
+PLR_8636426ZC: folds
+*** FLOP *** [9c 2c 4c]
+PLR_1941506KN: checks
+PLR_8420949VO: bets $0.12 
+PLR_1941506KN: calls $0.12 
+*** TURN *** [9c 2c 4c] [Jc]
+Table deposit $5 
+PLR_1941506KN: checks
+PLR_8420949VO: checks
+*** RIVER *** [9c 2c 4c Jc] [8c]
+PLR_1941506KN: bets $0.58 
+PLR_8420949VO: folds
+Uncalled bet ($0.58) returned to PLR_1941506KN
+PLR_1941506KN: shows [Qd Ac]
+PLR_1941506KN collected $0.58 from pot
+PLR_8420949VO: shows [Kd Qh]
+Hero: shows [Ts 5h]
+PLR_7645513OL: shows [8d 7d]
+PLR_8636426ZC: shows [Kh Js]
+*** SUMMARY ***
+Total pot $0.61 | Rake $0.03
+Board [9c 2c 4c Jc 8c]
+Seat 1: PLR_1941506KN showed [Qd Ac] and won ($0.58)
+Seat 3: PLR_8420949VO showed [Kd Qh]
+Seat 4: Hero (button) showed [Ts 5h]
+Seat 5: PLR_7645513OL (small blind) showed [8d 7d]
+Seat 6: PLR_8636426ZC (big blind) showed [Kh Js]
+
+
+
+
