@@ -103,7 +103,7 @@ class Player(BaseModel):
 
 class Round(BaseModel):
     id: int
-    street: Literal['Prefloip', 'Flop', 'Turn', 'River', 'Showdown']
+    street: Literal['Preflop', 'Flop', 'Turn', 'River', 'Showdown']
     cards: Optional[List[CARDS]] = None
     actions: List[Action]
 

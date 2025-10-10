@@ -2,13 +2,13 @@ from decimal import Decimal
 from src.convert import convert_ignition_to_open_hh
 import random
 
-from src.models import IgnitionHandHistory
+from src.models import Action, IgnitionHandHistory, Round
 from src.models import Player
 
 TEST_INPUT_PATH = "tests/ignition_sample.txt"
 
 def test_convert_ignition_cash_to_open_hh():
-    random.seed(42)  # For reproducibility
+    random.seed(42)
     expected = [IgnitionHandHistory.model_construct(
         spec_version="1.4.6",
         site_name="ignition",
@@ -70,6 +70,160 @@ def test_convert_ignition_cash_to_open_hh():
         table_name="35104085",
         table_size=6,
         version="1.4.7",
+        rounds=[
+            Round.model_construct(
+                id=0,
+                street="Preflop",
+                actions=[
+                    Action.model_construct(
+                        action_number=0,
+                        player_id=36913811,
+                        type="Post SB",
+                        amount=Decimal('0.02'),
+                    ),
+                    Action.model_construct(
+                        action_number=1,
+                        player_id=85822413,
+                        type="Post BB",
+                        amount=Decimal('0.05'),
+                    ),
+                    Action.model_construct(
+                        action_number=2,
+                        player_id=85822413,
+                        type="Dealt Cards",
+                        cards=['7c', 'Qc']
+                    ),
+                    Action.model_construct(
+                        action_number=3,
+                        player_id=14942604,
+                        type="Dealt Cards",
+                        cards=['Qd', 'Td']
+                    ),
+                    Action.model_construct(
+                        action_number=4,
+                        player_id=3356887,
+                        type="Dealt Cards",
+                        cards=['5c', 'Kh'] 
+                    ),
+                    Action.model_construct(
+                        action_number=5,
+                        player_id=99529224,
+                        type="Dealt Cards",
+                        cards=['Js', '3c'] 
+                    ),
+                    Action.model_construct(
+                        action_number=6,
+                        player_id=32868829,
+                        type="Dealt Cards",
+                        cards=['5d', '9s']
+                    ),
+                    Action.model_construct(
+                        action_number=7,
+                        player_id=36913811,
+                        type="Dealt Cards",
+                        cards=['8c', '6h']
+                    ),
+                    Action.model_construct(
+                        action_number=8,
+                        player_id=14942604,
+                        type="Call",
+                        amount=Decimal('0.05'),
+                        cards=['Qd', 'Td']
+                    ),
+                    Action.model_construct(
+                        action_number=3,
+                        player_id=3356887,
+                        type="Fold",
+                        cards=['5c', 'Kh'] 
+                    ),
+                    Action.model_construct(
+                        action_number=4,
+                        player_id=99529224,
+                        type="Fold",
+                        cards=['Js', '3c'] 
+                    ),
+                    Action.model_construct(
+                        action_number=5,
+                        player_id=32868829,
+                        type="Fold",
+                        cards=['5d', '9s']
+                    ),
+                    Action.model_construct(
+                        action_number=6,
+                        player_id=36913811,
+                        type="Call",
+                        amount=Decimal('0.03'),
+                        cards=['8c', '6h']
+                    ),
+                    Action.model_construct(
+                        action_number=7,
+                        player_id=85822413,
+                        type="Raise",
+                        amount=Decimal('0.10'),
+                        cards=['7c', 'Qc']
+                    ),
+                    Action.model_construct(
+                        action_number=8,
+                        player_id=14942604,
+                        type="Call",
+                        amount=Decimal('0.10'),
+                        cards=['Qd', 'Td']
+                    ),
+                    Action.model_construct(
+                        action_number=6,
+                        player_id=36913811,
+                        type="Fold",
+                        cards=['8c', '6h']
+                    ),
+
+                ],
+            ),
+            Round.model_construct(
+                id=1,
+                street="Flop",
+                cards=['4h', 'Jh', '8h'],
+                actions=[
+                    Action.model_construct(
+                        action_number=0,
+                        player_id=85822413,
+                        type="Check",
+                        cards=['7c', 'Qc']
+                    ),
+                    Action.model_construct(
+                        action_number=1,
+                        player_id=14942604,
+                        type="Check",
+                        cards=['Qd', 'Td']
+                    )
+                ],
+            ),
+            Round.model_construct(
+                id=2,
+                street="Turn",
+                cards=['Tc'],
+                actions=[
+                    Action.model_construct(
+                        action_number=0,
+                        player_id=85822413,
+                        type="Check",
+                        cards=['7c', 'Qc']
+                    ),
+                    Action.model_construct(
+                        action_number=1,
+                        player_id=14942604,
+                        type="Bet",
+                        amount=Decimal('0.28'),
+                        cards=['Qd', 'Td']
+                    ),
+                    Action.model_construct(
+                        action_number=2,
+                        player_id=85822413,
+                        type="Fold",
+                        cards=['7c', 'Qc']
+                    ),
+                ],
+            )
+        ],
     )]
     with open(TEST_INPUT_PATH, 'r') as infile:
         result = convert_ignition_to_open_hh(infile)
