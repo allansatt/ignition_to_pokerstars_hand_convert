@@ -24,9 +24,9 @@ def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
     return hands
 
 def _setup_hand(seat_map, infile):
-    IGNITION_SEAT_REGEX = r'Seat ([\d]): (\w*\s?\w+\+?\d?)\s(\[ME\])?\s?\(\$(\d+\.?\d{0,2})'
+    IGNITION_SEAT_REGEX = r'Seat ([\d]): (\w*\s?\w+\+?\d?)\s(?:\[ME\])?\s?\(\$(\d+\.?\d{0,2})'
     line = infile.readline().strip()
-    while line != "*** HOLE CARDS ***":
+    while 'Set dealer' not in line:
         if line.startswith("Ignition Hand #"):
             open_hh_hand = IgnitionHandHistory.model_construct()
             hand_id = re.search(r'Hand #(\d+)', line).group(1)
@@ -46,7 +46,7 @@ def _setup_hand(seat_map, infile):
             open_hh_hand.players.append(Player(
                 name=str(seat_map[player_seat]),
                 seat=int(player_seat),
-                starting_stack=Decimal(seat_info.group(4)),
+                starting_stack=Decimal(seat_info.group(3)),
                 is_sitting_out=False,
                 id= seat_map[player_seat],
             )),
@@ -57,156 +57,166 @@ def _setup_hand(seat_map, infile):
             if line.startswith("Dealer"):
                 continue
         line = infile.readline().strip()
-        
     return open_hh_hand
 def _read_rounds(open_hh_hand, seat_map, infile):
     line = infile.readline().strip()
+    actions = []
     round = Round.model_construct(
         id=0,
         street="Preflop",
-        actions=[]
+        actions=actions
     )
     rounds = []
-    actions = []
     seat_to_cards = {}
     def _get_seat_from_position(pos):
         if pos == "Small Blind":
-            return (open_hh_hand.dealer_seat + 1) % open_hh_hand.table_size + 1
+            return ((open_hh_hand.dealer_seat) % open_hh_hand.table_size) + 1
         if pos == "Big Blind":
-            return (open_hh_hand.dealer_seat + 2) % open_hh_hand.table_size + 1
+            return ((open_hh_hand.dealer_seat + 1) % open_hh_hand.table_size) + 1
         if pos == "UTG":
-            return (open_hh_hand.dealer_seat + 3) % open_hh_hand.table_size + 1
+            return ((open_hh_hand.dealer_seat + 2) % open_hh_hand.table_size) + 1
         if pos == "UTG+1":
-            return (open_hh_hand.dealer_seat + 4) % open_hh_hand.table_size + 1
+            return ((open_hh_hand.dealer_seat + 3) % open_hh_hand.table_size) + 1
         if pos == "UTG+2":
-            return (open_hh_hand.dealer_seat + 5) % open_hh_hand.table_size + 1
+            return ((open_hh_hand.dealer_seat + 4) % open_hh_hand.table_size) + 1
         if pos == "Dealer":
             return open_hh_hand.dealer_seat
         
         return None
     while line != '*** SUMMARY ***':
         if line.startswith("*** FLOP ***"):
-            round.actions = actions
             rounds.append(round)
             cards_search = re.search(r'\[(\w\w) (\w\w) (\w\w)\]', line)
+            actions = []
             round = Round.model_construct(
                 id=1,
                 street="Flop",
                 cards=[cards_search.group(1), cards_search.group(2), cards_search.group(3)],
-                actions=[]
+                actions=actions
             )
-            actions = []
         if line.startswith("*** TURN ***"):
-            round.actions = actions
             rounds.append(round)
             cards_search = re.search(r'\w\w \w\w \w\w\] \[(\w\w)\]', line)
+            actions = []
             round = Round.model_construct(
                 id=2,
                 street="Turn",
                 cards=[cards_search.group(1)],
-                actions=[]
+                actions=actions
             )
-            actions = []
         if line.startswith("*** RIVER ***"):
-            round.actions = actions
             rounds.append(round)
             cards_search = re.search(r'\w\w \w\w \w\w \w\w\] \[(\w\w)\]', line)
+            actions = []
             round = Round.model_construct(
                 id=2,
                 street="Turn",
                 cards=[cards_search.group(1)],
-                actions=[]
+                actions=actions
             )
-            actions = []
-        if line.startswith("Small Blind : Small Blind"):
+        if ": Small Blind" in line:
             open_hh_hand.small_blind_amount = Decimal(re.search(r'\$(\d+\.?\d{0,2})', line).group(1))
             seat_number = _get_seat_from_position("Small Blind")
             actions.append(
                 Action.model_construct(
-                    action_number=len(actions)+1,
+                    action_number=len(actions),
                     player_id=seat_map[seat_number],
-                    type="PostSB",
+                    action="Post SB",
                     amount=open_hh_hand.small_blind_amount
                 )
             )
-        if line.startswith("Big Blind : Big Blind"):
+        #Note: capitalization difference vs Small Blind
+        if ": Big blind" in line:
             open_hh_hand.big_blind_amount = Decimal(re.search(r'\$(\d+\.?\d{0,2})', line).group(1))
             seat_number = _get_seat_from_position("Big Blind")
             actions.append(
                 Action.model_construct(
-                    action_number=len(actions)+1,
+                    action_number=len(actions),
                     player_id=seat_map[seat_number],
-                    type="PostBB",
+                    action="Post BB",
                     amount=open_hh_hand.big_blind_amount
                 )
             )
         if "Card dealt to a spot" in line:
-            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(\s\[ME\]\s)?: Card dealt to a spot \[(\w\w) (\w\w)\]', line)
+            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Card dealt to a spot \[(\w\w) (\w\w)\]', line)
             position = regex_match.group(1)
-            cards = [regex_match.group(3), regex_match.group(4)]
+            cards = [regex_match.group(2), regex_match.group(3)]
             seat = _get_seat_from_position(position)
             seat_to_cards[seat] = cards
             actions.append(
                 Action.model_construct(
-                    action_number=len(actions)+1,
+                    action_number=len(actions),
                     player_id=seat_map[seat],
-                    type="Dealt Cards",
+                    action="Dealt Cards",
                     cards=cards
                 )
             )
         if "Checks" in line:
-            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(\s\[ME\]\s)?: Checks', line)
+            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Checks', line)
             position = regex_match.group(1)
             seat = _get_seat_from_position(position)
             actions.append(
                 Action.model_construct(
-                    action_number=len(actions)+1,
+                    action_number=len(actions),
                     player_id=seat_map[seat],
-                    type="Check",
+                    action="Check",
                     cards=seat_to_cards[seat]
                 )
             )
         if "Bets" in line:
-            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(\s\[ME\]\s)?: Bets \$(\d+\.?\d{0,2})', line)
+            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Bets \$(\d+\.?\d{0,2})', line)
             position = regex_match.group(1)
-            amount = Decimal(regex_match.group(3))
+            amount = Decimal(regex_match.group(2))
             seat = _get_seat_from_position(position)
             actions.append(
                 Action.model_construct(
-                    action_number=len(actions)+1,
+                    action_number=len(actions),
                     player_id=seat_map[seat],
-                    type="Bet",
+                    action="Bet",
                     amount=amount,
                     cards=seat_to_cards[seat]
                 )
             )
         if "Calls" in line:
-            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(\s\[ME\]\s)?: Calls \$(\d+\.?\d{0,2})', line)
+            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Calls \$(\d+\.?\d{0,2})', line)
             position = regex_match.group(1)
-            amount = Decimal(regex_match.group(3))
+            amount = Decimal(regex_match.group(2))
             seat = _get_seat_from_position(position)
             actions.append(
                 Action.model_construct(
-                    action_number=len(actions)+1,
+                    action_number=len(actions),
                     player_id=seat_map[seat],
-                    type="Call",
+                    action="Call",
                     amount=amount,
                     cards=seat_to_cards[seat]
                 )
             )
         if "Raises" in line:
-            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(\s\[ME\]\s)?: Raises \$(\d+\.?\d{0,2}) to \$\d+\.?\d{0,2}', line)
+            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Raises \$(\d+\.?\d{0,2}) to \$\d+\.?\d{0,2}', line)
             position = regex_match.group(1)
-            amount = Decimal(regex_match.group(3))
+            amount = Decimal(regex_match.group(2))
             seat = _get_seat_from_position(position)
             actions.append(
                 Action.model_construct(
-                    action_number=len(actions)+1,
+                    action_number=len(actions),
                     player_id=seat_map[seat],
-                    type="Raise",
+                    action="Raise",
                     amount=amount,
+                    cards=seat_to_cards[seat]
+                )
+            )
+        if "Folds" in line:
+            regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Folds', line)
+            position = regex_match.group(1)
+            seat = _get_seat_from_position(position)
+            actions.append(
+                Action.model_construct(
+                    action_number=len(actions),
+                    player_id=seat_map[seat],
+                    action="Fold",
                     cards=seat_to_cards[seat]
                 )
             )
         line = infile.readline().strip()
     rounds.append(round)
+    return rounds
