@@ -54,9 +54,9 @@ def test_convert_ignition_cash_to_open_hh():
                 starting_stack=Decimal('4.45'),
             ),
             Player.model_construct(
-                id=85822413,
+                id=32868829,
                 is_sitting_out=False,
-                name="85822413",
+                name="32868829",
                 seat=6,
                 starting_stack=Decimal('4.87'),
             ),
@@ -227,5 +227,4 @@ def test_convert_ignition_cash_to_open_hh():
     )]
     with open(TEST_INPUT_PATH, 'r') as infile:
         result = convert_ignition_to_open_hh(infile)
-    breakpoint()
     assert result == expected
