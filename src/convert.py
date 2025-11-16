@@ -3,7 +3,7 @@ from random import randint
 import re
 import io
 
-from src.models import IgnitionHandHistory, Player, Round, Action
+from src.models import IgnitionHandHistory, Player, PlayerWin, Pot, Round, Action
 
 def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
     hands = []
@@ -14,7 +14,9 @@ def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
         if open_hh_hand:
             hands.append(open_hh_hand)
         open_hh_hand = _setup_hand(seat_map, infile)
-        open_hh_hand.rounds = _read_rounds(open_hh_hand, seat_map, infile)
+        open_hh_hand.rounds, pots_minus_rakes = _read_rounds_and_pots(open_hh_hand, seat_map, infile)
+        open_hh_hand.pots = _calculate_total_pots_from_summary(pots_minus_rakes, infile)
+
         return [open_hh_hand]
 
     if not open_hh_hand:
@@ -58,7 +60,8 @@ def _setup_hand(seat_map, infile):
                 continue
         line = infile.readline().strip()
     return open_hh_hand
-def _read_rounds(open_hh_hand, seat_map, infile):
+
+def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
     line = infile.readline().strip()
     actions = []
     round = Round.model_construct(
@@ -67,6 +70,7 @@ def _read_rounds(open_hh_hand, seat_map, infile):
         actions=actions
     )
     rounds = []
+    pots = []
     seat_to_cards = {}
     def _get_seat_from_position(pos):
         if pos == "Small Blind":
@@ -125,7 +129,7 @@ def _read_rounds(open_hh_hand, seat_map, infile):
                     amount=open_hh_hand.small_blind_amount
                 )
             )
-        #Note: capitalization difference vs Small Blind
+        #NOTE: capitalization difference vs Small Blind
         if ": Big blind" in line:
             open_hh_hand.big_blind_amount = Decimal(re.search(r'\$(\d+\.?\d{0,2})', line).group(1))
             seat_number = _get_seat_from_position("Big Blind")
@@ -217,6 +221,62 @@ def _read_rounds(open_hh_hand, seat_map, infile):
                     cards=seat_to_cards[seat]
                 )
             )
+        #NOTE: Even though Open HH Doesn't put this in the rounds, Ignition puts it in the River.
+        if "Hand result" in line:
+            groups = re.search(r'(\w+\+?\d?) : Hand result(?:-Side pot)? \$(\d+\.\d\d)', line).groups()
+            is_side = "-Side pot" in line
+            if not pots:
+                pots.append(Pot.model_construct(
+                    number=0,
+                    amount=Decimal('0.00'),
+                    player_wins=[]
+                ))
+            if is_side and len(pots) == 1:
+                pots.append(Pot.model_construct(
+                    number=1,
+                    amount=Decimal('0.00'),
+                    player_wins=[]
+                ))
+            pot = pots[1] if is_side else pots[0]
+            pot.amount += Decimal(groups[1])
+            pot.player_wins.append(
+                PlayerWin.model_construct(
+                    #TODO: consolidate with population of rake contributions if possible
+                    player_id=seat_map[_get_seat_from_position(groups[0])],
+                    win_amount=Decimal(groups[1])
+                )
+            )
+            #TODO: populate the playerwins as well.
         line = infile.readline().strip()
     rounds.append(round)
-    return rounds
+    return rounds, pots
+
+def _calculate_total_pots_from_summary(pots_minus_rakes, infile):
+    """Since Ignition only gives individual payouts after rake, we need to use the gross pot amount to calculate the rake and add it back into every pot, side-pot, and player win."""
+    line = infile.readline().strip()
+    pots = []
+    post_rake_total = sum([pot.amount for pot in pots_minus_rakes])
+    while 'Total Pot' not in line:
+        line = infile.readline().strip()
+    total_pot = Decimal(re.search(r'Total Pot\(\$(\d+\.?\d{0,2})\)', line).group(1))
+    for pot in pots_minus_rakes:
+        pot_amt = pot.amount / post_rake_total * total_pot
+        pot_rake = pot_amt - pot.amount
+        new_player_wins = []
+        for player_win in pot.player_wins:
+            new_win_amount = player_win.win_amount / pot.amount * pot_amt
+            new_player_win = PlayerWin.model_construct(
+                player_id=player_win.player_id,
+                win_amount=new_win_amount,
+                contributed_rake=new_win_amount - player_win.win_amount
+            )
+            new_player_wins.append(new_player_win)
+        pots.append(Pot.model_construct(
+            number=pot.number,
+            amount=pot_amt,
+            rake=pot_rake,
+            player_wins=new_player_wins
+        ))
+    return pots
+# calculate here? make a mapping of so index[pot] : {rake[pot]:{[playerid]:rake_amount}}
+# calculate outside, just iterate thru. Probably makes more sense

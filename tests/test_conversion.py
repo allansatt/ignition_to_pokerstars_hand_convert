@@ -1,8 +1,10 @@
 from decimal import Decimal
 from src.convert import convert_ignition_to_open_hh
 import random
+import deepdiff
 
-from src.models import Action, IgnitionHandHistory, Round
+
+from src.models import Action, IgnitionHandHistory, PlayerWin, Pot, Round
 from src.models import Player
 
 TEST_INPUT_PATH = "tests/ignition_sample.txt"
@@ -224,7 +226,30 @@ def test_convert_ignition_cash_to_open_hh():
                 ],
             )
         ],
+        pots=[
+            Pot(
+                number=0,
+                amount=Decimal("0.35"),
+                rake=Decimal("0.01"),
+                jackpot=None,
+                player_wins=[
+                    PlayerWin(
+                        player_id=14942604,
+                        win_amount=Decimal("0.35"),
+                        cashout_amount=None,
+                        cashout_fee=None,
+                        bonus_amount=None,
+                        contributed_rake=Decimal("0.01"),
+                    )
+                ],
+            )
+        ],
     )]
     with open(TEST_INPUT_PATH, 'r') as infile:
         result = convert_ignition_to_open_hh(infile)
-    assert result == expected
+    diff = deepdiff.DeepDiff(result, expected, significant_digits=6)
+    assert diff == {}
+#TODO:
+# Side pots - so this info is only available in the Turn...that stinks
+# 10 handed tables
+# check if 3 digit numbers have commas
