@@ -64,7 +64,7 @@ class TournamentInfo(BaseModel):
     bounty_fee_amount: Optional[Decimal] = None
     initial_stack: int
     type: Literal['STT', 'MTT']
-    flags: List[Literal[
+    flags: Optional[List[Literal[
         "SNG",
         "DON",
         "Bounty",
@@ -83,7 +83,7 @@ class TournamentInfo(BaseModel):
         "Re-Entry",
         "Power_Up",
         "Progressive-Bounty"
-    ]]
+    ]]] = None
     speed: Speed
 
 class BetLimit(BaseModel):
@@ -152,11 +152,11 @@ class OpenHandHistory(BaseModel):
     big_blind_amount: Decimal
     ante_amount: Optional[Decimal] = None
     hero_player_id: Optional[int] = None
-    flags: List[Literal['Run_It_Twice', 'Anonymous', 'Observed', 'Fast', 'Cap']]
+    flags: Optional[List[Literal['Run_It_Twice', 'Anonymous', 'Observed', 'Fast', 'Cap']]] = None
     players: List[Player]
     rounds: List[Round]
     pots: List[Pot]
-    tournament_bounties: List[TournamentBounty]
+    tournament_bounties: Optional[List[TournamentBounty]] = None
 
 
 class IgnitionHandHistory(OpenHandHistory):
@@ -165,6 +165,7 @@ class IgnitionHandHistory(OpenHandHistory):
     network_name: str = "bovada"
     internal_version: str = "0.1.0"
     # TODO: Parse this from file
+    currency: str = "USD"
     tournament: bool = False
     game_type: str = "holdem"
     bet_limit: str = "NL"

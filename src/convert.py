@@ -2,31 +2,26 @@ from decimal import Decimal
 from random import randint
 import re
 import io
-
 from src.models import IgnitionHandHistory, Player, PlayerWin, Pot, Round, Action
 
 def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
     hands = []
     open_hh_hand = None
-    #TODO: don't abuse mutability to initialize this
-    seat_map = {}
-    while infile.buffer:
-        if open_hh_hand:
-            hands.append(open_hh_hand)
-        open_hh_hand = _setup_hand(seat_map, infile)
+    while infile.buffer:            
+        seat_map, open_hh_hand = _setup_hand_and_get_seat_map(infile)
         open_hh_hand.rounds, pots_minus_rakes = _read_rounds_and_pots(open_hh_hand, seat_map, infile)
-        open_hh_hand.pots = _calculate_total_pots_from_summary(pots_minus_rakes, infile)
-
+        open_hh_hand.pots = _calculate_total_pots_from_summary_and_net_pots(pots_minus_rakes, infile)
+        open_hh_hand.__class__.model_validate(open_hh_hand.model_dump())
+        hands.append(open_hh_hand)
         return [open_hh_hand]
 
     if not open_hh_hand:
         print("No hands found in the input file.")
-    else:
-        hands.append(open_hh_hand)
     return hands
 
-def _setup_hand(seat_map, infile):
+def _setup_hand_and_get_seat_map(infile):
     IGNITION_SEAT_REGEX = r'Seat ([\d]): (\w*\s?\w+\+?\d?)\s(?:\[ME\])?\s?\(\$(\d+\.?\d{0,2})'
+    seat_map = {}
     line = infile.readline().strip()
     while 'Set dealer' not in line:
         if line.startswith("Ignition Hand #"):
@@ -59,7 +54,7 @@ def _setup_hand(seat_map, infile):
             if line.startswith("Dealer"):
                 continue
         line = infile.readline().strip()
-    return open_hh_hand
+    return seat_map, open_hh_hand
 
 def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
     line = infile.readline().strip()
@@ -241,18 +236,16 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
             pot.amount += Decimal(groups[1])
             pot.player_wins.append(
                 PlayerWin.model_construct(
-                    #TODO: consolidate with population of rake contributions if possible
                     player_id=seat_map[_get_seat_from_position(groups[0])],
                     win_amount=Decimal(groups[1])
                 )
             )
-            #TODO: populate the playerwins as well.
         line = infile.readline().strip()
     rounds.append(round)
     return rounds, pots
 
-def _calculate_total_pots_from_summary(pots_minus_rakes, infile):
-    """Since Ignition only gives individual payouts after rake, we need to use the gross pot amount to calculate the rake and add it back into every pot, side-pot, and player win."""
+"""Ignition only gives individual payouts after rake, and a single total pot including all side pots and rake."""
+def _calculate_total_pots_from_summary_and_net_pots(pots_minus_rakes, infile):
     line = infile.readline().strip()
     pots = []
     post_rake_total = sum([pot.amount for pot in pots_minus_rakes])
@@ -278,5 +271,3 @@ def _calculate_total_pots_from_summary(pots_minus_rakes, infile):
             player_wins=new_player_wins
         ))
     return pots
-# calculate here? make a mapping of so index[pot] : {rake[pot]:{[playerid]:rake_amount}}
-# calculate outside, just iterate thru. Probably makes more sense

@@ -49,7 +49,6 @@ name = "ignition-to-pokerstars-hand-convert"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "deepdiff" },
     { name = "pydantic" },
     { name = "typing" },
 ]
@@ -62,7 +61,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "deepdiff", specifier = ">=8.6.1" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "typing", specifier = ">=3.10.0.0" },
 ]

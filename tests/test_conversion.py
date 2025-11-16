@@ -249,7 +249,3 @@ def test_convert_ignition_cash_to_open_hh():
         result = convert_ignition_to_open_hh(infile)
     diff = deepdiff.DeepDiff(result, expected, significant_digits=6)
     assert diff == {}
-#TODO:
-# Side pots - so this info is only available in the Turn...that stinks
-# 10 handed tables
-# check if 3 digit numbers have commas
