@@ -7,21 +7,33 @@ from src.models import IgnitionHandHistory, Player, PlayerWin, Pot, Round, Actio
 def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
     hands = []
     open_hh_hand = None
-    while infile.buffer:            
-        seat_map, open_hh_hand = _setup_hand_and_get_seat_map(infile)
-        open_hh_hand.rounds, pots_minus_rakes = _read_rounds_and_pots(open_hh_hand, seat_map, infile)
+    pos = infile.tell()
+    raw_line = infile.readline()
+    infile.seek(pos)
+    while raw_line != '':
+        seat_map, position_map, open_hh_hand = _setup_hand_and_get_seat_map_and_position_map(infile)
+        open_hh_hand.rounds, pots_minus_rakes = _read_rounds_and_pots(open_hh_hand, seat_map, position_map, infile)
         open_hh_hand.pots = _calculate_total_pots_from_summary_and_net_pots(pots_minus_rakes, infile)
-        open_hh_hand.__class__.model_validate(open_hh_hand.model_dump())
+        try:
+            open_hh_hand.__class__.model_validate(open_hh_hand.model_dump())
+        except Exception as e:
+            raise e
         hands.append(open_hh_hand)
-        return [open_hh_hand]
-
+        pos = infile.tell()
+        raw_line = infile.readline()
+        while not raw_line.startswith("Ignition Hand #") and raw_line != '':
+            raw_line = infile.readline()
+        if raw_line.startswith("Ignition Hand #"):
+            infile.seek(pos)
     if not open_hh_hand:
         print("No hands found in the input file.")
     return hands
 
-def _setup_hand_and_get_seat_map(infile):
+def _setup_hand_and_get_seat_map_and_position_map(infile):
     IGNITION_SEAT_REGEX = r'Seat ([\d]): (\w*\s?\w+\+?\d?)\s(?:\[ME\])?\s?\(\$(\d+\.?\d{0,2})'
+    #TODO: track user behavior across a single table (e.g. make seat_map consistent across hands)
     seat_map = {}
+    position_map = {}
     line = infile.readline().strip()
     while 'Set dealer' not in line:
         if line.startswith("Ignition Hand #"):
@@ -37,15 +49,16 @@ def _setup_hand_and_get_seat_map(infile):
             open_hh_hand.players = []
         if line.startswith("Seat "):
             seat_info = re.search(IGNITION_SEAT_REGEX, line)
+            position_info = seat_info.group(2)
             player_seat = int(seat_info.group(1))
-            if player_seat not in seat_map:
-                seat_map[player_seat] = randint(1,99999999)
+            seat_map[player_seat] = randint(1,99999999)
+            position_map[position_info] = player_seat
             open_hh_hand.players.append(Player(
                 name=str(seat_map[player_seat]),
                 seat=int(player_seat),
                 starting_stack=Decimal(seat_info.group(3)),
                 is_sitting_out=False,
-                id= seat_map[player_seat],
+                id=seat_map[player_seat],
             )),
             if seat_info.group(2).lower() == 'dealer':
                 open_hh_hand.dealer_seat = int(seat_info.group(1))
@@ -54,9 +67,17 @@ def _setup_hand_and_get_seat_map(infile):
             if line.startswith("Dealer"):
                 continue
         line = infile.readline().strip()
-    return seat_map, open_hh_hand
+    if 'dealer_seat' not in open_hh_hand.__dict__:
+        dealer = position_map['Small Blind'] -1
+        if dealer == 0:
+            dealer = open_hh_hand.table_size
+        if dealer in seat_map:
+            raise ValueError("Non player dealer calculation.")
+        open_hh_hand.dealer_seat = dealer
+            
+    return seat_map, position_map,open_hh_hand
 
-def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
+def _read_rounds_and_pots(open_hh_hand, seat_map, position_map, infile):
     line = infile.readline().strip()
     actions = []
     round = Round.model_construct(
@@ -67,21 +88,6 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
     rounds = []
     pots = []
     seat_to_cards = {}
-    def _get_seat_from_position(pos):
-        if pos == "Small Blind":
-            return ((open_hh_hand.dealer_seat) % open_hh_hand.table_size) + 1
-        if pos == "Big Blind":
-            return ((open_hh_hand.dealer_seat + 1) % open_hh_hand.table_size) + 1
-        if pos == "UTG":
-            return ((open_hh_hand.dealer_seat + 2) % open_hh_hand.table_size) + 1
-        if pos == "UTG+1":
-            return ((open_hh_hand.dealer_seat + 3) % open_hh_hand.table_size) + 1
-        if pos == "UTG+2":
-            return ((open_hh_hand.dealer_seat + 4) % open_hh_hand.table_size) + 1
-        if pos == "Dealer":
-            return open_hh_hand.dealer_seat
-        
-        return None
     while line != '*** SUMMARY ***':
         if line.startswith("*** FLOP ***"):
             rounds.append(round)
@@ -115,7 +121,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
             )
         if ": Small Blind" in line:
             open_hh_hand.small_blind_amount = Decimal(re.search(r'\$(\d+\.?\d{0,2})', line).group(1))
-            seat_number = _get_seat_from_position("Small Blind")
+            seat_number = position_map["Small Blind"]
             actions.append(
                 Action.model_construct(
                     action_number=len(actions),
@@ -127,7 +133,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
         #NOTE: capitalization difference vs Small Blind
         if ": Big blind" in line:
             open_hh_hand.big_blind_amount = Decimal(re.search(r'\$(\d+\.?\d{0,2})', line).group(1))
-            seat_number = _get_seat_from_position("Big Blind")
+            seat_number = position_map["Big Blind"]
             actions.append(
                 Action.model_construct(
                     action_number=len(actions),
@@ -140,7 +146,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
             regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Card dealt to a spot \[(\w\w) (\w\w)\]', line)
             position = regex_match.group(1)
             cards = [regex_match.group(2), regex_match.group(3)]
-            seat = _get_seat_from_position(position)
+            seat = position_map[position]
             seat_to_cards[seat] = cards
             actions.append(
                 Action.model_construct(
@@ -153,7 +159,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
         if "Checks" in line:
             regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Checks', line)
             position = regex_match.group(1)
-            seat = _get_seat_from_position(position)
+            seat = position_map[position]
             actions.append(
                 Action.model_construct(
                     action_number=len(actions),
@@ -166,7 +172,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
             regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Bets \$(\d+\.?\d{0,2})', line)
             position = regex_match.group(1)
             amount = Decimal(regex_match.group(2))
-            seat = _get_seat_from_position(position)
+            seat = position_map[position]
             actions.append(
                 Action.model_construct(
                     action_number=len(actions),
@@ -180,7 +186,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
             regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Calls \$(\d+\.?\d{0,2})', line)
             position = regex_match.group(1)
             amount = Decimal(regex_match.group(2))
-            seat = _get_seat_from_position(position)
+            seat = position_map[position]
             actions.append(
                 Action.model_construct(
                     action_number=len(actions),
@@ -194,7 +200,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
             regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Raises \$(\d+\.?\d{0,2}) to \$\d+\.?\d{0,2}', line)
             position = regex_match.group(1)
             amount = Decimal(regex_match.group(2))
-            seat = _get_seat_from_position(position)
+            seat = position_map[position]
             actions.append(
                 Action.model_construct(
                     action_number=len(actions),
@@ -207,7 +213,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
         if "Folds" in line:
             regex_match = re.search(r'(\w+\s?\w*\+?\d?)\s(?:\s\[ME\]\s)?: Folds', line)
             position = regex_match.group(1)
-            seat = _get_seat_from_position(position)
+            seat = position_map[position]
             actions.append(
                 Action.model_construct(
                     action_number=len(actions),
@@ -218,7 +224,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
             )
         #NOTE: Even though Open HH Doesn't put this in the rounds, Ignition puts it in the River.
         if "Hand result" in line:
-            groups = re.search(r'(\w+\+?\d?) : Hand result(?:-Side pot)? \$(\d+\.\d\d)', line).groups()
+            groups = re.search(r'(\w+ ?\w*\+?\d?) : Hand result(?:-Side pot)? \$(\d+\.\d\d)', line).groups()
             is_side = "-Side pot" in line
             if not pots:
                 pots.append(Pot.model_construct(
@@ -236,7 +242,7 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, infile):
             pot.amount += Decimal(groups[1])
             pot.player_wins.append(
                 PlayerWin.model_construct(
-                    player_id=seat_map[_get_seat_from_position(groups[0])],
+                    player_id=seat_map[position_map[groups[0]]],
                     win_amount=Decimal(groups[1])
                 )
             )
