@@ -47,7 +47,6 @@ class Speed(BaseModel):
 class Action(BaseModel):
     action_number : int
     player_id : Optional[int] = None
-    #TODO validate  bet is not taken preflop
     action: ACTIONS
     amount: Optional[Decimal] = None
     is_allin: Optional[bool] = None
@@ -116,7 +115,6 @@ class PlayerWin(BaseModel):
     contributed_rake: Optional[Decimal] = None
 
 class Pot(BaseModel):
-    #TODO: validate between 1 and 1 less than table_size
     number: int
     amount: Decimal
     rake: Optional[Decimal] = None
@@ -132,7 +130,6 @@ class OpenHandHistory(BaseModel):
     site_name: str
     network_name: str
     internal_version: str
-    #TODO: make tournament fields XNOR
     tournament: Optional[bool] = None
     tournament_info: Optional[TournamentInfo] = None
     game_number: str
@@ -143,12 +140,9 @@ class OpenHandHistory(BaseModel):
     game_type: Literal['Holdem', 'Omaha', 'OmahaHiLo', 'Stud', 'StudHiLo', 'Draw']
     bet_limit: BetLimit
     table_size: int
-    #TODO: validate fmt
     currency: str
-    #TODO validate less than table_size
     dealer_seat: int
     small_blind_amount: Decimal
-    #TODO: validate greater than small_blind_amount
     big_blind_amount: Decimal
     ante_amount: Optional[Decimal] = None
     hero_player_id: Optional[int] = None
@@ -164,9 +158,8 @@ class IgnitionHandHistory(OpenHandHistory):
     site_name: str = "ignition"
     network_name: str = "bovada"
     internal_version: str = "0.1.0"
-    # TODO: Parse this from file
+    # TODO: Get tournament file, use to parse these values
     currency: str = "USD"
     tournament: bool = False
     game_type: str = "holdem"
     bet_limit: str = "NL"
-    table_size: int = 6

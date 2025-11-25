@@ -5,15 +5,18 @@ import io
 from src.models import IgnitionHandHistory, Player, PlayerWin, Pot, Round, Action
 
 def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
-    hands = []
+    hands :list[IgnitionHandHistory] = []
     open_hh_hand = None
     pos = infile.tell()
     raw_line = infile.readline()
     infile.seek(pos)
+    table_size = 0
     while raw_line != '':
         seat_map, position_map, open_hh_hand = _setup_hand_and_get_seat_map_and_position_map(infile)
         open_hh_hand.rounds, pots_minus_rakes = _read_rounds_and_pots(open_hh_hand, seat_map, position_map, infile)
         open_hh_hand.pots = _calculate_total_pots_from_summary_and_net_pots(pots_minus_rakes, infile)
+        table_size = max(table_size, len(open_hh_hand.players))
+        open_hh_hand.table_size = table_size
         try:
             open_hh_hand.__class__.model_validate(open_hh_hand.model_dump())
         except Exception as e:
@@ -25,6 +28,8 @@ def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
             raw_line = infile.readline()
         if raw_line.startswith("Ignition Hand #"):
             infile.seek(pos)
+    for hand in hands:
+        hand.table_size = table_size
     if not open_hh_hand:
         print("No hands found in the input file.")
     return hands
