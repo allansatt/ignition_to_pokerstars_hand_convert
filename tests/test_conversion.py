@@ -518,3 +518,4 @@ def test_convert_ignition_cash_to_open_hh():
         result = convert_ignition_to_open_hh(infile)
     diff = deepdiff.DeepDiff([expected_hand_1, expected_hand_2], result[:2],  significant_digits=6)
     assert not diff
+    assert len(result) == 5
