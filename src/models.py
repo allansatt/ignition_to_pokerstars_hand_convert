@@ -156,7 +156,6 @@ class IgnitionHandHistory(OpenHandHistory):
     site_name: str = "ignition"
     network_name: str = "bovada"
     internal_version: str = "0.1.0"
-    # TODO: Get tournament file, use to parse these values
     currency: str = "USD"
     tournament: bool = False
     game_type: str = "holdem"
