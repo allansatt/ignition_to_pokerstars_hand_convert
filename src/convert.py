@@ -119,8 +119,8 @@ def _read_rounds_and_pots(open_hh_hand, seat_map, position_map, infile):
             cards_search = re.search(r'\w\w \w\w \w\w \w\w\] \[(\w\w)\]', line)
             actions = []
             round = Round.model_construct(
-                id=2,
-                street="Turn",
+                id=3,
+                street="River",
                 cards=[cards_search.group(1)],
                 actions=actions
             )

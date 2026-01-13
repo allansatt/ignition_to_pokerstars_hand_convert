@@ -53,7 +53,6 @@ class Action(BaseModel):
     cards: Optional[List[CARDS]] = None
 
 class TournamentInfo(BaseModel):
-    # Define fields as per your tournament_info_obj spec
     tournament_number: str
     name: str
     start_date_utc: datetime
@@ -92,7 +91,6 @@ class BetLimit(BaseModel):
 
 class Player(BaseModel):
     id: int 
-    #TOOD: validate seat less than table_size
     seat: int
     name: str
     display: Optional[str] = None
