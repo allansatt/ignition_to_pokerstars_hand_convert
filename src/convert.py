@@ -2,7 +2,7 @@ from decimal import Decimal
 from random import randint
 import re
 import io
-from src.models import IgnitionHandHistory, Player, PlayerWin, Pot, Round, Action
+from open_hh_models.models import IgnitionHandHistory, Player, PlayerWin, Pot, Round, Action
 
 def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
     hands :list[IgnitionHandHistory] = []
@@ -36,7 +36,6 @@ def convert_ignition_to_open_hh(infile: io.TextIOWrapper) -> dict:
 
 def _setup_hand_and_get_seat_map_and_position_map(infile):
     IGNITION_SEAT_REGEX = r'Seat ([\d]): (\w*\s?\w+\+?\d?)\s(?:\[ME\])?\s?\(\$(\d+\.?\d{0,2})'
-    #TODO: track user behavior across a single table (e.g. make seat_map consistent across hands)
     seat_map = {}
     position_map = {}
     line = infile.readline().strip()
