@@ -4,8 +4,8 @@ import random
 import deepdiff
 
 
-from src.models import Action, IgnitionHandHistory, PlayerWin, Pot, Round
-from src.models import Player
+from open_hh_models.models import Action, IgnitionHandHistory, PlayerWin, Pot, Round
+from open_hh_models.models import Player
 
 TEST_INPUT_PATH = "tests/HH20250716-232414 - 21171592 - RING - $0.02-$0.05 - HOLDEM - NL - TBL No.35104085.txt"
 
